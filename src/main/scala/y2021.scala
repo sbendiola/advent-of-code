@@ -1,4 +1,5 @@
 package y2021 {
+    
     import java.nio.file.{Paths, Path, Files}
     import scala.io.Source
 
@@ -60,20 +61,23 @@ In this example, there are 7 measurements that are larger than the previous meas
 
 How many measurements are larger than the previous measurement? */
     package day1 {
+        
+        import PartialFunction.condOpt
+
+        type Result = (Option[Int], Int)
 
         def run(): Int =
             using(relativeResource("day_1_input"))(_.close)(source => 
                 largeThanPreviousCount(source.getLines.map(_.trim.toInt)))
 
         def largeThanPreviousCount(iter: Iterator[Int]) =
-            iter.foldLeft((None, 0):(Option[Int], Int)) {
+            iter.foldLeft((None, 0): Result) {
                 (acc, value) =>
-                    val count = 
-                        acc._2 + PartialFunction.condOpt(acc._1) {
-                            case Some(prev) if value > prev => 
-                                1
-                        }.getOrElse(0)
-                    acc.copy(Some(value), count)
+                    val count = condOpt(acc._1) {
+                                    case Some(prev) if value > prev => 
+                                        1
+                                 }.getOrElse(0) + acc._2
+                    acc.copy(Option(value), count)
             }._2
             
 
