@@ -1,12 +1,21 @@
-@main def hello: Unit = 
-  println("Hello world!")
-  println(msg)
+package y2021 {
+    import java.nio.file.{Paths, Path, Files}
+    import scala.io.Source
 
-def msg = "I was compiled by Scala 3. :)"
-
-
-/*   --- Day 1: Sonar Sweep ---
-
+    def relativeResource(path: String*) =
+        val location = Array("src", "main", "resources", "2021") ++ path
+        val cd = Paths.get(".", location*).toAbsolutePath
+        Source.fromFile(cd.ensuring(Files.exists(_), s"$cd does not exist").toFile)
+    
+    def using[T, R](t: => T)(cleanup: T => Unit)(use: T => R) =
+        lazy val resource = t
+        try {
+            use(resource)
+        } finally {
+            cleanup(resource)
+        }
+    /*   --- Day 1: Sonar Sweep ---
+    
 You're minding your own business on a ship at sea when the overboard alarm goes off! You rush to see if you can help. Apparently, one of the Elves tripped and accidentally sent the sleigh keys flying into the ocean!
 
 Before you know it, you're inside a submarine the Elves keep ready for situations like this. It's covered in Christmas lights (because of course it is), and it even has an experimental antenna that should be able to track the keys if you can boost its signal strength high enough; there's a little meter that indicates the antenna's signal strength by displaying 0-50 stars.
@@ -50,6 +59,23 @@ To do this, count the number of times a depth measurement increases from the pre
 In this example, there are 7 measurements that are larger than the previous measurement.
 
 How many measurements are larger than the previous measurement? */
-def day1() =
-  println(new java.io.File(".").getCanonicalPath)
-  ()
+    package day1 {
+
+        def run(): Int =
+            using(relativeResource("day_1_input"))(_.close)(source => 
+                largeThanPreviousCount(source.getLines.map(_.trim.toInt)))
+
+        def largeThanPreviousCount(iter: Iterator[Int]) =
+            iter.foldLeft((None, 0):(Option[Int], Int)) {
+                (acc, value) =>
+                    val count = 
+                        acc._2 + PartialFunction.condOpt(acc._1) {
+                            case Some(prev) if value > prev => 
+                                1
+                        }.getOrElse(0)
+                    acc.copy(Some(value), count)
+            }._2
+            
+
+    }
+}
