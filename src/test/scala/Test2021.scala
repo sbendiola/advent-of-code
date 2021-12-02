@@ -4,7 +4,7 @@ package y2021
   import org.junit.Assert.*
 
   class Test2021:
-    val data = List(
+    val data = (List(
         199,
         200,
         208,
@@ -14,14 +14,15 @@ package y2021
         240,
         269,
         260,
-        263
-      )
-    @Test def test_day1_part1(): Unit = 
+        263), ())
+    
+    @Test 
+    def day1_part1(): Unit = 
+      assertEquals(7, day1.largeThanPreviousCount(data(0).iterator))
+      assertEquals(1832, day1.part1())
 
-      assertEquals(7, day1.largeThanPreviousCount(data.iterator, (p, v) => v > p))
-
-      assertEquals(1832, day1.run())
-
-    @Test def test_day1_part2(): Unit = 
-      assertEquals(5, day1.largeThanPreviousCount(data.sliding(3), _.sum < _.sum))
-      assertEquals(1858, day1.run2())
+    @Test 
+    def day1_part2(): Unit = 
+      import y2021.day1.intListOrdering
+      assertEquals(5, day1.largeThanPreviousCount(data(0).sliding(3)))
+      assertEquals(1858, day1.part2())

@@ -23,39 +23,39 @@ package y2021:
         import y2021.utils.*
         import PartialFunction.condOpt
 
-        case class Result[T](prev: Option[T] = None, 
-            greaterThanPrevious: Int = 0, 
-            comparison: (T, T) => Boolean):
+        given intListOrdering: Ordering[List[Int]] with
+            def compare(as: List[Int], bs: List[Int]): Int = 
+                as.sum.compare(bs.sum)
+
+        case class Result[T](prev: Option[T] = None, count: Int = 0)(using ordered: Ordering[T]):
             def +(value: T): Result[T] = 
                 condOpt(prev) {
-                    case Some(p) if comparison(p, value) =>
-                        copy(Option(value), greaterThanPrevious + 1)
+                    case Some(p) if ordered.compare(p, value) < 0 =>
+                        copy(Option(value), count + 1)
                 }.getOrElse(copy(prev=Option(value)))
         
-        
-        def run(): Int =
+        def withSource[R](f: Source => R):R =
             using(relativeResource("day_1_input"))
                 (_.close)
-                (source => largeThanPreviousCount[Int](
-                    source
-                        .getLines
-                        .map(_.trim.toInt), comparison = (p, v) => p < v))
+                (f)
 
+        
+        def part1(): Int =
+            withSource(source => 
+                largeThanPreviousCount(source.getLines.map(_.trim.toInt)))
+            
         /*  
             https://adventofcode.com/2021/day/
         */
-        def largeThanPreviousCount[T](iter: Iterator[T], comparison: (T, T) => Boolean): Int =
-            iter.foldLeft(Result(comparison = comparison))(_ + _).greaterThanPrevious
+        def largeThanPreviousCount[T](iter: Iterator[T])(using ordered: Ordering[T]): Int =
+            iter.foldLeft(Result())(_ + _).count
         
-        def run2() =
-            using(relativeResource("day_1_input"))
-                (_.close)
-                (source => largeThanPreviousCount[List[Int]](
+        def part2() =
+            withSource(source => 
+                largeThanPreviousCount[List[Int]](
                     source
                         .getLines
-                        .map(_.trim.toInt).sliding(3).map(_.toList), 
-                        comparison = (p, v) => p.sum < v.sum))
-
+                        .map(_.trim.toInt).sliding(3).map(_.toList)))
 
     end day1
     
