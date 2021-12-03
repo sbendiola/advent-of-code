@@ -2,6 +2,7 @@ package y2021
 
   import org.junit.Test
   import org.junit.Assert.*
+import y2021.day2.Command
 
   class Test2021:
     val data = (List(
@@ -14,7 +15,15 @@ package y2021
         240,
         269,
         260,
-        263), ())
+        263), 
+        List(
+          "forward 5",
+          "down 5",
+          "forward 8",
+          "up 3",
+          "down 8",
+          "forward 2"
+        ))
     
     @Test 
     def day1_part1(): Unit = 
@@ -26,3 +35,10 @@ package y2021
       import y2021.day1.intListOrdering
       assertEquals(5, day1.largeThanPreviousCount(data(0).sliding(3)))
       assertEquals(1858, day1.part2())
+
+    @Test 
+    def day2_part1(): Unit = 
+      val commandText = data(1)
+      assertEquals(150, day2.location(Command(commandText.iterator)))
+      assertEquals(1524750, day2.part1())
+
