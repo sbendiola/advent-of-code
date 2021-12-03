@@ -1,7 +1,7 @@
 val scala3Version = "3.1.0"
 
 lazy val root = project
-  .in(file("."))
+  .in(file("./2021"))
   .settings(
     name := "advent-of-code",
     version := "0.1.0-SNAPSHOT",
