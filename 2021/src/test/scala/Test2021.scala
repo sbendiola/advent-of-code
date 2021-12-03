@@ -46,7 +46,7 @@ class Test2021:
   @Test 
   def day2_part2_simple(): Unit = 
     val commandText = data(1)
-    assertEquals(900, day2.location(Command(commandText.iterator), LocationWithAim()))
+    assertEquals(900, day2.location(Command(commandText.iterator), day2.LocationWithAim()))
     
   @Test 
   def day2_part2_real_data(): Unit = 
