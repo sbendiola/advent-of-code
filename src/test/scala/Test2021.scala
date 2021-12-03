@@ -3,6 +3,7 @@ package y2021
   import org.junit.Test
   import org.junit.Assert.*
 import y2021.day2.Command
+import y2021.day2.LocationWithAim
 
   class Test2021:
     val data = (List(
@@ -42,3 +43,13 @@ import y2021.day2.Command
       assertEquals(150, day2.location(Command(commandText.iterator)))
       assertEquals(1524750, day2.part1())
 
+
+    @Test 
+    def day2_part2_simple(): Unit = 
+      val commandText = data(1)
+      assertEquals(900, day2.location(Command(commandText.iterator), LocationWithAim()))
+      
+    @Test 
+    def day2_part2_real_data(): Unit = 
+      val commandText = data(1)
+      assertEquals(1592426537, day2.part2())

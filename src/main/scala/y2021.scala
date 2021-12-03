@@ -18,7 +18,7 @@ package y2021:
             finally
                 cleanup(resource)
 
-        def withSource[R](day: Int, f: Source => R):R =
+        def withTestData[R](day: Int)(f: Source => R):R =
             using(relativeResource(s"day_${day}_input"))
                 (_.close)
                 (f)
@@ -42,9 +42,9 @@ package y2021:
         
         
         def part1(): Int =
-            withSource(1, source => 
-                largeThanPreviousCount(source.getLines.map(_.trim.toInt)))
-            
+            withTestData(day=1) { source => 
+                largeThanPreviousCount(source.getLines.map(_.trim.toInt))
+            }
         /*  
             https://adventofcode.com/2021/day/
         */
@@ -52,12 +52,12 @@ package y2021:
             iter.foldLeft(Result())(_ + _).count
         
         def part2() =
-            withSource(1, source => 
+            withTestData(day=1) { source => 
                 largeThanPreviousCount[List[Int]](
                     source
                         .getLines
-                        .map(_.trim.toInt).sliding(3).map(_.toList)))
-
+                        .map(_.trim.toInt).sliding(3).map(_.toList))
+            }
     end day1
 
     package day2:
@@ -67,8 +67,28 @@ package y2021:
 
         case class Command(direction: Direction, steps: Int)
         
-        case class Location(depth: Int = 0, horizontal: Int = 0):
-            def +(command: Command): Location =
+        trait XYLocation {
+            type Type <: XYLocation
+            def depth: Int
+            def horizontal: Int
+            def aim: Int
+            def +(command: Command): Type
+        }
+        case class LocationWithAim(depth: Int = 0, horizontal: Int = 0, aim: Int=0) extends XYLocation:
+            type Type = LocationWithAim
+            def +(command: Command) =
+                import Direction.*
+                command match
+                    case Command(Forward, count) =>
+                        copy(horizontal=horizontal+count, depth=depth + (aim * count))
+                    case Command(Up, count) =>
+                        copy(aim=aim - count)
+                    case Command(Down, count) =>
+                        copy(aim=aim + count)
+                
+        case class Location(depth: Int = 0, horizontal: Int = 0, aim: Int=0) extends XYLocation:
+            type Type = Location
+            def +(command: Command) =
                 import Direction.*
                 command match
                 case Command(Forward, count) =>
@@ -78,29 +98,30 @@ package y2021:
                 case Command(Down, count) =>
                     copy(depth=depth+count)
                 
-                        
-            
-
         object Command:
 
             def apply(text: Iterator[String]): Iterator[Command] = 
-                text.map(line => {
+                text.map { line => 
                     line.trim.split(" ") match 
                         case Array(d, c) =>
                             val Some(directon) = Direction.values
                                 .find(_.productPrefix.toLowerCase == d)
                                 .ensuring(_.isDefined, s"could not map $d to a Direction")
                             Command(directon, c.toInt)
-                })
+                }
 
         def part1(): Int = 
-            utils.withSource(2, { source => 
-                val commands = Command(source.getLines)
-                location(commands)
-            })
+            utils.withTestData(day=2) { source => 
+                location(Command(source.getLines))
+            }
 
-        def location(commands: Iterator[Command]): Int = 
-            val result = commands.foldLeft(Location())(_ + _)
+        def part2(): Int = 
+            utils.withTestData(day=2) { source => 
+                location(Command(source.getLines), LocationWithAim())
+            }
+
+        def location(commands: Iterator[Command], init: XYLocation = Location()): Int = 
+            val result = commands.foldLeft(init)(_ + _)
             result.depth * result.horizontal
             
 
