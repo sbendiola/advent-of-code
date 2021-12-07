@@ -3,6 +3,12 @@ package aoc
 enum Direction:
     case Up, Down, Forward
 
+object Direction:
+    def from(text: String): Direction = 
+        Direction.values.find(_.productPrefix.equalsIgnoreCase(text))
+            .getOrElse(scala.sys.error(s"no Direction for $text"))
+
+
 case class Command(direction: Direction, steps: Int)
 
 trait XYLocation:
@@ -28,12 +34,6 @@ case class Location(depth: Int = 0, horizontal: Int = 0, aim: Int=0) extends XYL
 object Command:
 
     def apply(text: Iterator[String]): Iterator[Command] = 
-        text.map { line => 
-            line.trim.split(" ") match 
-                case Array(d, c) =>
-                    val Some(directon) = Direction.values
-                        .find(_.productPrefix.toLowerCase == d)
-                        .ensuring(_.isDefined, s"could not map $d to a Direction")
-                    Command(directon, c.toInt)
-        }
+        text.map(_ match 
+            case s"$direction $count" => Command(Direction.from(direction), count.toInt))
 
