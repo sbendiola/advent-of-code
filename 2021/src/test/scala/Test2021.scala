@@ -77,4 +77,14 @@ class Test2021:
         //part1
         assertEquals(3895776, day3.powerConsumption(source.getLines))
     }
+    //part2 sample
+    assertEquals(23, day3.oxygenGenRating(data(2).iterator)) 
+    assertEquals(10, day3.co2Rating(data(2).iterator))
+    utils.withTestData(3) {
+      source =>
+        //part2
+        assertEquals(7928162, day3.lifeSupportRating(source.getLines.toList))
+    }
+
+    
     
