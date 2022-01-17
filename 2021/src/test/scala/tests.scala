@@ -37,55 +37,71 @@ val sampleData = (List(
 
 
 class TestDay1:
+  import day1.*
+  val simpleData = sampleData(0)
+  @Test 
+  def part1SampleData() = 
+    assertEquals(7, largeThanPreviousCount(simpleData.iterator))
+    
+  @Test
+  def part1TestData() = 
+    assertEquals(1832, utils.withTestData(id) { source =>
+      largeThanPreviousCount(source.getLines.map(_.trim.toInt))
+    })
 
   @Test 
-  def part1(): Unit = 
-    assertEquals(7, day1.largeThanPreviousCount(sampleData(0).iterator))
-    assertEquals(1832, day1.part1())
-
-  @Test 
-  def part2(): Unit = 
+  def part2() = 
     import day1.intListOrdering
-    assertEquals(5, day1.largeThanPreviousCount(sampleData(0).sliding(3)))
-    assertEquals(1858, day1.part2())
+    val value = utils.withTestData(id) { source => 
+      largeThanPreviousCount[List[Int]](
+                source
+                    .getLines
+                    .map(_.trim.toInt).sliding(3).map(_.toList))
+    }
+    assertEquals(1858, value)
 
 class Day2Tests:
-  @Test 
-  def part1(): Unit = 
-    val commandText = sampleData(1)
-    assertEquals(150, day2.location(day2.Command(commandText.iterator)))
-    assertEquals(1524750, day2.part1())
-
+  import day2.*
+  val commandText = sampleData(1)
 
   @Test 
-  def part2_simple(): Unit = 
-    val commandText = sampleData(1)
-    assertEquals(900, day2.location(day2.Command(commandText.iterator), day2.LocationWithAim()))
-    
+  def part1SampleData() = 
+    assertEquals(150, location(Command(commandText.iterator)))
+
+  @Test
+  def part1TestData2() =
+    val value = utils.withTestData(id) { source => location(Command(source.getLines))}
+    assertEquals(1524750, value)
+
   @Test 
-  def part2_real_data(): Unit = 
-    val commandText = sampleData(1)
-    assertEquals(1592426537, day2.part2())
+  def part2_simple() = 
+    assertEquals(900, location(Command(commandText.iterator), LocationWithAim()))
+      
+  @Test 
+  def part2_real_data() = 
+    assertEquals(1592426537, utils.withTestData(id) { source => 
+      location(Command(source.getLines), LocationWithAim())
+    })
 
 class Day3Tests:
+  import day3.*
   @Test
-  def sample(): Unit =
-    val id = day3.id
-    assertEquals(22, day3.gamma(sampleData(2).iterator))
-    assertEquals(9, day3.epsilon(sampleData(2).iterator)) 
-    assertEquals(198, day3.powerConsumption(sampleData(2).iterator)) 
+  def sample() =
+    assertEquals(22, gamma(sampleData(2).iterator))
+    assertEquals(9, epsilon(sampleData(2).iterator)) 
+    assertEquals(198, powerConsumption(sampleData(2).iterator)) 
     utils.withTestData(id) {
       source =>
         //part1
-        assertEquals(3895776, day3.powerConsumption(source.getLines))
+        assertEquals(3895776, powerConsumption(source.getLines))
     }
     //part2 sample
-    assertEquals(23, day3.oxygenGenRating(sampleData(2).iterator)) 
-    assertEquals(10, day3.co2Rating(sampleData(2).iterator))
+    assertEquals(23, oxygenGenRating(sampleData(2).iterator)) 
+    assertEquals(10, co2Rating(sampleData(2).iterator))
     utils.withTestData(id) {
       source =>
         //part2
-        assertEquals(7928162, day3.lifeSupportRating(source.getLines.toList))
+        assertEquals(7928162, lifeSupportRating(source.getLines.toList))
     }
 
     

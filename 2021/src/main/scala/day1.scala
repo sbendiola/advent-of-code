@@ -13,18 +13,6 @@ object day1 extends BaseDay(1):
                     copy(Option(value), count + 1)
             }.getOrElse(copy(prev=Option(value)))
 
-    def part1(): Int =
-        withTestData { source => 
-            largeThanPreviousCount(source.getLines.map(_.trim.toInt))
-          }
 
     def largeThanPreviousCount[T](iter: Iterator[T])(using ordered: Ordering[T]): Int =
         iter.foldLeft(Result())(_ + _).count
-
-    def part2() =
-        withTestData { source => 
-            largeThanPreviousCount[List[Int]](
-                source
-                    .getLines
-                    .map(_.trim.toInt).sliding(3).map(_.toList))
-        }

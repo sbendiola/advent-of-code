@@ -13,15 +13,7 @@ object day2 extends BaseDay(2):
                     copy(aim=aim + count)
 
                     
-    def part1(): Int = 
-        withTestData { source => 
-            location(Command(source.getLines))
-        }
 
-    def part2(): Int = 
-        withTestData { source => 
-            location(Command(source.getLines), LocationWithAim())
-        }
 
     def location(commands: Iterator[Command], init: XYLocation = Location()): Int = 
         val result = commands.foldLeft(init)(_ + _)

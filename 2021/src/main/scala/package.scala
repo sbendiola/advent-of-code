@@ -47,8 +47,8 @@ import java.nio.file.Files
 trait BaseDay(day: Int):
     val id = DayId.fromOrdinal(day - 1)
         
-    def withTestData[R](f: Source => R): R =
-        utils.withTestData(id)(f)
+    //def withTestData[R](f: Source => R): R =
+    //    utils.withTestData(id)(f)
     
 object utils:
 
