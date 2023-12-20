@@ -2,7 +2,7 @@
 .bloop
 .bsp
 .metals
-.vscode
+#.vscode
 .direnv
 project/target
 project/project
