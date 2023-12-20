@@ -2,7 +2,8 @@ use std::fs;
 use std::io::Error;
 
 fn main() {
-    println!("Hello, world!");
+    let result = calibration_values("resources/input1");
+    println!("day1 part 1 {:?}", result);
 }
 
 fn calibration_values(file_name: &str) -> Result<i32, Error> {
@@ -33,7 +34,7 @@ fn calibration_value(contents: &str) -> i32 {
 }
 
 #[cfg(test)]
-mod tests {
+mod tests_day1_part1 {
     use crate::calibration_value;
     #[test]
     fn test_calibration_value() {

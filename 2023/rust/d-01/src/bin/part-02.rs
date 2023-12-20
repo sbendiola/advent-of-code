@@ -1,11 +1,12 @@
 use std::fs;
 use std::io::Error;
-use std::collections::HashMap;
 
-const debug: bool = true;
+
+const DEBUG: bool = false;
 
 fn main() {
-    println!("Hello, world!");
+    let result = calibration_values("resources/input1");
+    println!("day 1 part2 {:?}", result);
 }
 
 fn calibration_values(file_name: &str) -> Result<i32, Error> {
@@ -52,14 +53,14 @@ fn calibration_value_from_vec(contents: Vec<(i32, usize)>) -> i32 {
 
 fn calibration_value(contents: &str) -> i32 {
     let indices = indexes(contents);
-    if debug {
+    if DEBUG {
         println!("indices: {:?}", indices);
     }
     return calibration_value_from_vec(indices);
 }
 
 #[cfg(test)]
-mod tests {
+mod tests_day1_part2 {
     use crate::calibration_value;
     use crate::calibration_values;
     use crate::indexes;
