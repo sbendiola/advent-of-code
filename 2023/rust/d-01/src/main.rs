@@ -2,14 +2,12 @@ use std::fs;
 use std::io::Error;
 
 fn calibration_values(file_name: &str) -> Result<i32, Error> {
-    let contents = fs::read_to_string(file_name)?;    
-    let result = contents.lines().fold(0, |acc, line| {
-        acc + calibration_value(line)
-    });
+    let contents = fs::read_to_string(file_name)?;
+    let result = contents
+        .lines()
+        .fold(0, |acc, line| acc + calibration_value(line));
     Ok(result)
 }
-
-
 
 fn calibration_value(contents: &str) -> i32 {
     let result = contents.chars().fold(Vec::new(), |mut acc, c| {
