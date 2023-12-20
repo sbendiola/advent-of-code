@@ -1,0 +1,18 @@
+[package]
+name = "d-02"
+version = "0.1.0"
+edition = "2021"
+default-run = "main"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+regex = "1"
+
+[dev-dependencies]
+quickcheck = "1"
+quickcheck_macros = "1"
