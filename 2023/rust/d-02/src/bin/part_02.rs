@@ -1,10 +1,3 @@
-#[derive(Debug, Clone, Eq, PartialEq)]
-enum Cube {
-    Red,
-    Green,
-    Blue,
-}
-
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 struct Drawing {
     red: usize,
@@ -97,19 +90,12 @@ fn game_from_text(line: &str) -> Game {
 
 use std::fs;
 pub fn main() {
-    const params: Settings = Settings {
-        red: 12,
-        green: 13,
-        blue: 14,
-    };
     let initial: usize = 0;
     let power_count = fs::read_to_string("resources/input")
         .expect("failed opening file")
         .lines()
         .fold(initial, |acc, line| {
-            let g = game_from_text(line);
-            let id = g.id;
-            let power = power(g);
+            let power = power(game_from_text(line));
             println!("line:{} power:{}", line, power);
             acc + power
         });
@@ -140,7 +126,6 @@ fn power(game: Game) -> usize {
 extern crate quickcheck;
 
 #[cfg(test)]
-#[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 
 use std::fmt::Debug;
@@ -178,6 +163,10 @@ impl Arbitrary for Settings {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
+    use super::*;
+
     #[test]
     fn test_game_from_text() {
         let expected_values: HashMap<&str, Game> = [

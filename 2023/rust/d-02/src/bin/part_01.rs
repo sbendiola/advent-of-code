@@ -1,10 +1,3 @@
-#[derive(Debug, Clone, Eq, PartialEq)]
-enum Cube {
-    Red,
-    Green,
-    Blue,
-}
-
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 struct Drawing {
     red: usize,
@@ -97,7 +90,7 @@ fn game_from_text(line: &str) -> Game {
 
 use std::fs;
 pub fn main() {
-    const params: Settings = Settings {
+    const PARAMS: Settings = Settings {
         red: 12,
         green: 13,
         blue: 14,
@@ -109,7 +102,7 @@ pub fn main() {
         .fold(initial, |acc, line| {
             let g = game_from_text(line);
             let id = g.id;
-            let valid = possible(g, params);
+            let valid = possible(g, PARAMS);
             if valid {
                 println!("{} {} valid:{} acc:{}", id, line, valid, acc);
             }
