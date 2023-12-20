@@ -3,6 +3,7 @@
 .bsp
 .metals
 .vscode
+.direnv
 project/target
 project/project
 target
