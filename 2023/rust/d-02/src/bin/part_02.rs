@@ -17,15 +17,15 @@ struct Settings {
     green: usize,
     blue: usize,
 }
+
 use regex::Regex;
 
 fn game_from_text(line: &str) -> Game {
-    let mut draws = Vec::new();
-
     let draw_text = Regex::new(r"^Game (\d+): (.*)")
         .expect("failed to get draw regex")
         .captures(line)
         .expect("failed to find draw");
+
     let game_id = draw_text
         .get(1)
         .expect("failed to extract group id")
@@ -33,58 +33,56 @@ fn game_from_text(line: &str) -> Game {
         .parse::<usize>()
         .expect(format!("failed to parse id {:?}", line).as_str());
 
-    draw_text
+    let draws: Vec<Drawing> = draw_text
         .get(2)
         .expect("failed to extract group draw")
         .as_str()
         .split(";")
-        .for_each(|draw_line| {
-            let counts =
-                draw_line
-                    .split(",")
-                    .fold(Settings::default(), |mut acc, mut color_count| {
-                        color_count = color_count.trim();
-                        let color_count_match = Regex::new(r"^(\d+) (red|blue|green)")
-                            .expect("failed to get color counts")
-                            .captures(color_count)
-                            .expect(
-                                format!("failed to extract color counts {:?}", color_count)
-                                    .as_str(),
-                            );
-
-                        let count = color_count_match
-                            .get(1)
-                            .expect("failed to get count")
-                            .as_str()
-                            .trim()
-                            .parse::<usize>()
-                            .expect("failed to parse count");
-
-                        let color_text = color_count_match
-                            .get(2)
-                            .expect(format!("failed to get color {:?}", color_count).as_str())
-                            .as_str()
-                            .trim();
-
-                        match color_text {
-                            "red" => acc.red += count,
-                            "blue" => acc.blue += count,
-                            "green" => acc.green += count,
-                            _ => panic!("unknown color"),
-                        }
-                        acc
-                    });
-
-            draws.push(Drawing {
-                red: counts.red,
-                green: counts.green,
-                blue: counts.blue,
-            });
-        });
+        .map(|draw_line| to_drawing(draw_line))
+        .collect();
 
     Game {
         id: game_id,
         draws: draws,
+    }
+}
+
+fn to_drawing(draw_line: &str) -> Drawing {
+    let counts = draw_line.split(",").map(str::trim).fold(
+        Settings::default(),
+        |mut settings, color_count| {
+            let color_count_match = Regex::new(r"^(\d+) (red|blue|green)")
+                .expect("failed to get color counts")
+                .captures(color_count)
+                .expect(format!("failed to extract color counts {:?}", color_count).as_str());
+
+            let count = color_count_match
+                .get(1)
+                .expect("failed to get count")
+                .as_str()
+                .trim()
+                .parse::<usize>()
+                .expect("failed to parse count");
+
+            let color_text = color_count_match
+                .get(2)
+                .expect(format!("failed to get color {:?}", color_count).as_str())
+                .as_str()
+                .trim();
+            match color_text {
+                "red" => settings.red += count,
+                "blue" => settings.blue += count,
+                "green" => settings.green += count,
+                _ => panic!("unknown color"),
+            }
+            settings
+        },
+    );
+
+    Drawing {
+        red: counts.red,
+        green: counts.green,
+        blue: counts.blue,
     }
 }
 
