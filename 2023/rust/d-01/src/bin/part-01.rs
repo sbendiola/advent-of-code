@@ -35,7 +35,10 @@ fn calibration_value(contents: &str) -> i32 {
 
 #[cfg(test)]
 mod tests_day1_part1 {
+
     use crate::calibration_value;
+    use crate::calibration_values;
+
     #[test]
     fn test_calibration_value() {
         assert_eq!(calibration_value("1abc2"), 12);
@@ -44,7 +47,6 @@ mod tests_day1_part1 {
         assert_eq!(calibration_value("treb7uchet"), 77);
     }
 
-    use crate::calibration_values;
     #[test]
     fn test_calibration_values_sample_sum() {
         let result = calibration_values("resources/sample.txt");
