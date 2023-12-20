@@ -1,3 +1,6 @@
+use regex::Regex;
+use std::fs;
+
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 struct Drawing {
     red: usize,
@@ -17,103 +20,101 @@ struct Settings {
     green: usize,
     blue: usize,
 }
-use regex::Regex;
 
-fn game_from_text(line: &str) -> Game {
-    let mut draws = Vec::new();
+impl Settings {
+    fn add(self, color: &str, count: usize) -> Self {
+        let mut x = self;
 
-    let draw_text = Regex::new(r"^Game (\d+): (.*)")
-        .expect("failed to get draw regex")
-        .captures(line)
-        .expect("failed to find draw");
-    let game_id = draw_text
-        .get(1)
-        .expect("failed to extract group id")
-        .as_str()
-        .parse::<usize>()
-        .expect(format!("failed to parse id {:?}", line).as_str());
-
-    draw_text
-        .get(2)
-        .expect("failed to extract group draw")
-        .as_str()
-        .split(";")
-        .for_each(|draw_line| {
-            let counts =
-                draw_line
-                    .split(",")
-                    .fold(Settings::default(), |mut acc, mut color_count| {
-                        color_count = color_count.trim();
-                        let color_count_match = Regex::new(r"^(\d+) (red|blue|green)")
-                            .expect("failed to get color counts")
-                            .captures(color_count)
-                            .expect(
-                                format!("failed to extract color counts {:?}", color_count)
-                                    .as_str(),
-                            );
-
-                        let count = color_count_match
-                            .get(1)
-                            .expect("failed to get count")
-                            .as_str()
-                            .trim()
-                            .parse::<usize>()
-                            .expect("failed to parse count");
-
-                        let color_text = color_count_match
-                            .get(2)
-                            .expect(format!("failed to get color {:?}", color_count).as_str())
-                            .as_str()
-                            .trim();
-
-                        match color_text {
-                            "red" => acc.red += count,
-                            "blue" => acc.blue += count,
-                            "green" => acc.green += count,
-                            _ => panic!("unknown color"),
-                        }
-                        acc
-                    });
-
-            draws.push(Drawing {
-                red: counts.red,
-                green: counts.green,
-                blue: counts.blue,
-            });
-        });
-
-    Game {
-        id: game_id,
-        draws: draws,
+        match color {
+            "red" => x.red += count,
+            "blue" => x.blue += count,
+            "green" => x.green += count,
+            _ => panic!("unknown color"),
+        };
+        x
     }
 }
 
-use std::fs;
+fn game_from_text(line: &str) -> Game {
+    let draw_text = Regex::new(r"^Game (?P<id>\d+): (?P<game_line>.*)")
+        .expect("failed to get draw regex")
+        .captures(line)
+        .expect("failed to find draw");
+
+    match draw_text.name("id").zip(draw_text.name("game_line")) {
+        Some((id, game_line)) => {
+            let game_id = id
+                .as_str()
+                .parse::<usize>()
+                .expect(format!("failed to parse id {:?}", line).as_str());
+
+            let drawings = game_line.as_str().split(";").map(|draw_line| {
+                let counts = draw_line
+                    .split(",")
+                    .map(str::trim)
+                    .fold(Settings::default(), |acc, color_count| {
+                        counts(acc, color_count)
+                    });
+
+                Drawing {
+                    red: counts.red,
+                    green: counts.green,
+                    blue: counts.blue,
+                }
+            });
+
+            Game {
+                id: game_id,
+                draws: drawings.collect(),
+            }
+        }
+        None => panic!("failed to get id and game_line"),
+    }
+}
+
+fn counts(settings: Settings, color_count: &str) -> Settings {
+    let color_count_match = Regex::new(r"^(?P<count>\d+) (?P<color>red|blue|green)")
+        .expect("failed to get color counts")
+        .captures(color_count)
+        .expect(format!("failed to extract color counts {:?}", color_count).as_str());
+
+    match color_count_match
+        .name("count")
+        .zip(color_count_match.name("color"))
+    {
+        Some((count, color)) => {
+            let count = count
+                .as_str()
+                .trim()
+                .parse::<usize>()
+                .expect("failed to parse count");
+            let color_text = color.as_str().trim();
+            settings.add(color_text, count)
+        }
+        None => panic!("failed to get count and color"),
+    }
+}
+
 pub fn main() {
     const PARAMS: Settings = Settings {
         red: 12,
         green: 13,
         blue: 14,
     };
-    let initial: usize = 0;
-    let possible_count = fs::read_to_string("resources/input")
+
+    let possible_count: usize = fs::read_to_string("resources/input")
         .expect("failed opening file")
         .lines()
-        .fold(initial, |acc, line| {
+        .fold(0, |acc, line| {
             let g = game_from_text(line);
             let id = g.id;
-            let valid = possible(g, PARAMS);
-            if valid {
-                println!("{} {} valid:{} acc:{}", id, line, valid, acc);
-            }
-
-            acc + if valid { id } else { 0 }
+            acc + if possible(&g, &PARAMS) { id } else { 0 }
         });
-
+    assert_eq!(possible_count, 2716);
     println!("day1 part 1 {:?}", possible_count);
 }
 
-fn possible(game: Game, settings: Settings) -> bool {
+fn possible(game: &Game, settings: &Settings) -> bool {
     game.draws.iter().all(|draw| {
         draw.red <= settings.red && draw.green <= settings.green && draw.blue <= settings.blue
     })

@@ -18,6 +18,19 @@ struct Settings {
     blue: usize,
 }
 
+impl Settings {
+    fn add(self, color: &str, count: usize) -> Self {
+        let mut x = self;
+
+        match color {
+            "red" => x.red += count,
+            "blue" => x.blue += count,
+            "green" => x.green += count,
+            _ => panic!("unknown color"),
+        };
+        x
+    }
+}
 use regex::Regex;
 
 fn game_from_text(line: &str) -> Game {
@@ -48,36 +61,26 @@ fn game_from_text(line: &str) -> Game {
 }
 
 fn to_drawing(draw_line: &str) -> Drawing {
-    let counts = draw_line.split(",").map(str::trim).fold(
-        Settings::default(),
-        |mut settings, color_count| {
-            let color_count_match = Regex::new(r"^(\d+) (red|blue|green)")
-                .expect("failed to get color counts")
-                .captures(color_count)
-                .expect(format!("failed to extract color counts {:?}", color_count).as_str());
+    let counts =
+        draw_line
+            .split(",")
+            .map(str::trim)
+            .fold(Settings::default(), |settings, color_count| {
+                let color_count_match = Regex::new(r"^(?P<count>\d+) (?P<color>red|blue|green)")
+                    .expect("failed to get color counts")
+                    .captures(color_count)
+                    .expect(format!("failed to extract color counts {:?}", color_count).as_str());
 
-            let count = color_count_match
-                .get(1)
-                .expect("failed to get count")
-                .as_str()
-                .trim()
-                .parse::<usize>()
-                .expect("failed to parse count");
-
-            let color_text = color_count_match
-                .get(2)
-                .expect(format!("failed to get color {:?}", color_count).as_str())
-                .as_str()
-                .trim();
-            match color_text {
-                "red" => settings.red += count,
-                "blue" => settings.blue += count,
-                "green" => settings.green += count,
-                _ => panic!("unknown color"),
-            }
-            settings
-        },
-    );
+                match color_count_match
+                    .name("count")
+                    .zip(color_count_match.name("color"))
+                {
+                    Some((count, color)) => {
+                        settings.add(color.as_str(), count.as_str().parse::<usize>().unwrap())
+                    }
+                    None => panic!("failed to extract color counts {:?}", color_count),
+                }
+            });
 
     Drawing {
         red: counts.red,
@@ -92,12 +95,8 @@ pub fn main() {
     let power_count = fs::read_to_string("resources/input")
         .expect("failed opening file")
         .lines()
-        .fold(initial, |acc, line| {
-            let power = power(game_from_text(line));
-            println!("line:{} power:{}", line, power);
-            acc + power
-        });
-
+        .fold(initial, |acc, line| acc + power(game_from_text(line)));
+    assert_eq!(power_count, 72227);
     println!("day2 part 2 power_count:{:?}", power_count);
 }
 
