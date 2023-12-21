@@ -153,11 +153,14 @@ impl Board {
             .iter()
             .filter(|cell| cell.c == '*')
             .fold(Vec::new(), |mut acc, cell| {
-                let neighbor_parts: Vec<Part> = parts
-                    .iter()
-                    .cloned()
-                    .filter(|part| part.next_to(cell))
-                    .collect();
+                let neighbor_parts: Vec<Part> =
+                    parts.iter().fold(Vec::new(), |mut neighbor_parts, part| {
+                        if part.next_to(cell) && neighbor_parts.len() < 3 {
+                            neighbor_parts.push(part.clone());
+                        }
+                        neighbor_parts
+                    });
+
                 match neighbor_parts.get(0).zip(neighbor_parts.get(1)) {
                     Some((part, part2)) => {
                         acc.push(Gear::new(part.clone(), part2.clone()));
