@@ -36,7 +36,7 @@ pub fn main() {
         });
 
     let parts = board.get_parts();
-    let total: usize = parts.iter().fold(0, |mut acc, part| acc + part.power());
+    let total: usize = parts.iter().fold(0, |acc, part| acc + part.power());
 
     assert_eq!(total, 544433);
     println!("{} {}", file!().to_string(), total);
