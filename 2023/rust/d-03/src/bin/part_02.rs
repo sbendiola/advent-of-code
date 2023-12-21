@@ -1,4 +1,4 @@
-use std::fs;
+use std::{cell, fs};
 
 type Row = usize;
 type Col = usize;
@@ -35,10 +35,12 @@ pub fn main() {
                 })
         });
 
-    let parts = board.get_parts();
-    let total: usize = parts.iter().fold(0, |mut acc, part| acc + part.power());
+    let total = board
+        .gear_ratios()
+        .iter()
+        .fold(0, |acc, gear| acc + gear.ratio());
 
-    assert_eq!(total, 544433);
+    assert_eq!(total, 76314915);
     println!("{} {}", file!().to_string(), total);
 }
 
@@ -91,7 +93,20 @@ impl Cell {
 struct Board {
     cells: Vec<Cell>,
 }
+struct Gear {
+    part: Part,
+    part2: Part,
+}
 
+impl Gear {
+    fn new(part: Part, part2: Part) -> Self {
+        Gear { part, part2 }
+    }
+
+    fn ratio(&self) -> usize {
+        self.part.power() * self.part2.power()
+    }
+}
 impl Board {
     fn new() -> Self {
         Board { cells: Vec::new() }
@@ -111,7 +126,7 @@ impl Board {
         self.cells.push(cell);
     }
 
-    fn get_parts(self) -> Vec<Part> {
+    fn get_parts(&self) -> Vec<Part> {
         let digit_cells = self.cells.iter().filter(|cell| cell.c.is_digit(10));
         let mut parts: Vec<Part> = digit_cells.fold(Vec::new(), |mut parts, cell| {
             let cloned = cell.clone();
@@ -130,6 +145,28 @@ impl Board {
 
         parts.retain(|part| self.neighbors(part).iter().any(|cell| cell.is_symbol()));
         parts
+    }
+
+    fn gear_ratios(&self) -> Vec<Gear> {
+        let parts = self.get_parts();
+        self.cells
+            .iter()
+            .filter(|cell| cell.c == '*')
+            .fold(Vec::new(), |mut acc, cell| {
+                let neighbor_parts: Vec<Part> = parts
+                    .iter()
+                    .cloned()
+                    .filter(|part| part.next_to(cell))
+                    .collect();
+                match neighbor_parts.get(0).zip(neighbor_parts.get(1)) {
+                    Some((part, part2)) => {
+                        acc.push(Gear::new(part.clone(), part2.clone()));
+                    }
+                    _ => {}
+                }
+
+                acc
+            })
     }
 }
 
@@ -158,6 +195,10 @@ impl Part {
 
     fn contains(&self, cell: &Cell) -> bool {
         self.cells.contains(cell)
+    }
+
+    fn next_to(&self, other: &Cell) -> bool {
+        self.cells.iter().any(|cell| cell.next_to(other))
     }
 
     fn power(&self) -> usize {
@@ -231,7 +272,11 @@ mod tests {
         let parts = board.get_parts();
         assert_eq!(parts.len(), 8);
         let total: usize = parts.iter().fold(0, |mut acc, part| {
-            acc += part.power();
+            let mut power = 0;
+            for cell in part.cells.iter().rev() {
+                acc += 10usize.pow(power) * cell.c.to_digit(10).unwrap() as usize;
+                power += 1;
+            }
             acc
         });
         assert_eq!(total, 4361);
