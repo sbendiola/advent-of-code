@@ -292,6 +292,6 @@ mod tests {
     fn prop_possible(game: Game, settings: Settings) -> bool {
         game.draws.iter().all(|draw| {
             draw.red <= settings.red && draw.green <= settings.green && draw.blue <= settings.blue
-        }) == possible(game, settings)
+        }) == possible(&game, &settings)
     }
 }

@@ -1,3 +1,5 @@
+const DEBUG: bool = false;
+
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
 struct Drawing {
     red: usize,
@@ -111,10 +113,13 @@ fn power(game: Game) -> usize {
             acc
         });
     let pow = result.red * result.blue * result.green;
-    print!(
-        "{} r:{} g:{} b:{} result:{:?}",
-        game.id, result.red, result.green, result.blue, pow
-    );
+
+    if DEBUG {
+        println!(
+            "{} r:{} g:{} b:{} result:{:?}",
+            game.id, result.red, result.green, result.blue, pow
+        );
+    }
 
     pow
 }
