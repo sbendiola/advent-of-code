@@ -160,7 +160,6 @@ impl Board {
                         }
                         neighbor_parts
                     });
-
                 match neighbor_parts.get(0).zip(neighbor_parts.get(1)) {
                     Some((part, part2)) => {
                         acc.push(Gear::new(part.clone(), part2.clone()));
