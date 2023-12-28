@@ -11,7 +11,10 @@ pub(crate) fn main() {
                 if output.status.success() {
                     println!("Output: {}", String::from_utf8_lossy(&output.stdout));
                 } else {
-                    println!("Error: {}", String::from_utf8_lossy(&output.stderr));
+                    println!(
+                        "Error: not implemented {}",
+                        String::from_utf8_lossy(&output.stderr)
+                    );
                 }
             }
             Err(e) => {

@@ -1,9 +1,10 @@
 {
-    "editor.formatOnSave": true,
-    "editor.formatOnType": true,
-    "rust-analyzer.rustfmt.enableRangeFormatting": true,
+    "files.watcherExclude": {
+        "**/target": true
+    },
     "[rust]": {
-        "editor.defaultFormatter": "rust-lang.rust-analyzer", 
-        "editor.formatOnSave": true 
+        "editor.defaultFormatter": "rust-lang.rust-analyzer",
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
     },
 }

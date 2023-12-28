@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fs, usize};
+use std::{collections::HashSet, fs};
 
 use regex::Regex;
 
@@ -9,7 +9,7 @@ pub fn main() {
         .fold(0, |acc, line| {
             let card = card(line);
             let name = card.name.clone();
-            let points = points(card);
+            let points = card.points();
             println!("{} {}", name, points);
             acc + points
         });
@@ -20,7 +20,18 @@ pub fn main() {
 struct Card {
     name: String,
     winners: HashSet<u8>,
-    cards: Vec<u8>,
+    cards: HashSet<u8>,
+}
+
+impl Card {
+    fn points(self) -> u32 {
+        let winning_cards = self.cards.intersection(&self.winners).count();
+        if winning_cards > 0 {
+            1 << (winning_cards - 1)
+        } else {
+            0
+        }
+    }
 }
 
 fn card(text: &str) -> Card {
@@ -37,9 +48,7 @@ fn card(text: &str) -> Card {
         .name("winners")
         .expect(&format!("failed on {:?}", matched.name("name")))
         .as_str()
-        .split(" ")
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty())
+        .split_whitespace()
         .map(|s| s.parse::<u8>().expect(&format!("failed to parse {}", s)))
         .collect();
 
@@ -48,9 +57,7 @@ fn card(text: &str) -> Card {
         .unwrap()
         .as_str()
         .trim()
-        .split(" ")
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty())
+        .split_whitespace()
         .map(|s| s.parse::<u8>().expect(&format!("failed to parse {}", s)))
         .collect();
 
@@ -61,20 +68,6 @@ fn card(text: &str) -> Card {
     }
 }
 
-fn points(card: Card) -> usize {
-    let mut points = 0;
-    let winners = card.winners;
-    for card in card.cards {
-        if winners.contains(&card) {
-            if points == 0 {
-                points = 1;
-            } else {
-                points *= 2;
-            }
-        }
-    }
-    points
-}
 #[cfg(test)]
 mod tests {
 
@@ -83,27 +76,27 @@ mod tests {
     #[test]
     fn test_sample_input() {
         assert_eq!(
-            points(card("Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53")),
+            card("Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53").points(),
             8
         );
         assert_eq!(
-            points(card("Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19")),
+            card("Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19").points(),
             2
         );
         assert_eq!(
-            points(card("Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1")),
+            card("Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1").points(),
             2
         );
         assert_eq!(
-            points(card("Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83")),
+            card("Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83").points(),
             1
         );
         assert_eq!(
-            points(card("Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36")),
+            card("Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36").points(),
             0
         );
         assert_eq!(
-            points(card("Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11")),
+            card("Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11").points(),
             0
         );
     }
