@@ -35,36 +35,35 @@ impl Card {
 }
 
 fn card(text: &str) -> Card {
-    let re = Regex::new(r"^Card\s*(?P<name>\d+): (?P<winners>[^\|]+)\|(?P<cards>.*)$");
+    let parts: Vec<&str> = text.split(":").collect();
+    assert_eq!(parts.len(), 2);
 
+    let re = Regex::new(r"^Card\s*(?P<name>\d+)");
     let matched = re
         .expect("regex failed")
-        .captures(text)
+        .captures(parts[0])
         .expect(format!("did not match {:?}", text).as_str());
 
     let name = matched.name("name").unwrap().as_str().trim();
+    let parts: Vec<&str> = parts[1].split("|").collect();
+    assert!(parts.len() == 2, "failed on {:?}", parts);
 
-    let winners: HashSet<u8> = matched
-        .name("winners")
-        .expect(&format!("failed on {:?}", matched.name("name")))
-        .as_str()
-        .split_whitespace()
-        .map(|s| s.parse::<u8>().expect(&format!("failed to parse {}", s)))
+    let cards_result: Vec<HashSet<u8>> = parts
+        .iter()
+        .map(|text| {
+            let result = text.split_whitespace().map(|s| s.parse::<u8>().unwrap());
+            result.collect::<HashSet<u8>>()
+        })
         .collect();
 
-    let cards = matched
-        .name("cards")
-        .unwrap()
-        .as_str()
-        .trim()
-        .split_whitespace()
-        .map(|s| s.parse::<u8>().expect(&format!("failed to parse {}", s)))
-        .collect();
-
-    Card {
-        name: name.to_string(),
-        winners: winners,
-        cards: cards,
+    if let [winners, cards] = cards_result.as_slice() {
+        Card {
+            name: name.to_string(),
+            winners: winners.to_owned(),
+            cards: cards.to_owned(),
+        }
+    } else {
+        panic!("expected 2, failed on {:?}", parts);
     }
 }
 
