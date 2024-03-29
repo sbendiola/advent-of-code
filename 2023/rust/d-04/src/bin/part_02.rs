@@ -20,21 +20,24 @@ fn scratch_cards(cards: &Vec<Card>) -> u32 {
     let mut copies = vec![1u32; cards.len()];
     for i in 0..cards.len() {
         let card = cards.get(i).unwrap();
-        let mut count = card.count();
+        let mut count = card.count() as usize;
         let day_copies = copies[i];
         let mut next: usize = i + 1;
         println!("card {}  won {:?}", card.name, card.count());
+
         loop {
             if count == 0 {
                 break;
             }
+
             if let None = copies.get(next) {
                 break;
-            } else {
-                let before = copies[next];
-                copies[next] += day_copies;
-                println!("updated card {} {} -> {}", next + 1, before, copies[next]);
             }
+
+            let before = copies[next];
+            copies[next] += day_copies;
+            println!("updated card {} {} -> {}", next + 1, before, copies[next]);
+
             next += 1;
             count -= 1;
         }
