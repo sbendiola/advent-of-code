@@ -4,7 +4,52 @@ const assert = @import("std").debug.assert;
 const parseInt = std.fmt.parseInt;
 const DoublyLinkedList = std.DoublyLinkedList;
 pub fn main() !void {
-    std.debug.print("Hello, {s}!\n", .{"World"});
+    // 1. Obtain an allocator. ArenaAllocator is convenient for a single function/scope.
+    // var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    // defer arena.deinit();
+    // const allocator = arena.allocator();
+
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const alloc = arena.allocator();
+
+    // Get the current working directory (cwd) Dir object.
+    const cwd_dir = std.fs.cwd();
+
+    // Resolve the absolute path of "." (current directory) using the allocator.
+    const cwd_path = try cwd_dir.realpathAlloc(alloc, ".");
+
+    // Print the path to standard error.
+    // Use std.debug.print for general debugging output.
+    std.debug.print("Current working directory: {s}\n", .{cwd_path});
+
+    // 2. Open the file.
+    const file_path = "input1"; // Replace with your file name
+    var file = try std.fs.cwd().openFile(file_path, .{ .mode = .read_only });
+    defer file.close();
+
+    // 3. Create a buffer for the reader and instantiate a buffered reader.
+    // The buffer size should be large enough to hold a typical line or a chunk of data.
+    var buffer: [1024]u8 = undefined;
+    var reader = file.reader(&buffer);
+
+    // 4. Loop through the file, reading lines until the end.
+    // `readUntilDelimiterOrEof` handles reading into the provided buffer until '\n' or EOF.
+    var current: usize = 50;
+    var result: usize = 0;
+    while (try reader.interface.takeDelimiter('\n')) |line| {
+        if (line.len == 0) {
+            std.debug.print("The empty line is empty.\n", .{});
+            continue;
+        }
+        const cmd = try command(line);
+        current = position(current, cmd.direction, cmd.clicks);
+        if (current == 0) {
+            result += 1;
+        }
+    }
+
+    std.debug.print("day1 {}!\n", .{result});
 }
 
 pub fn add(a: i32, b: i32) i32 {
@@ -21,64 +66,63 @@ const Direction = enum(u8) {
     R = 'R',
 };
 const LAST: u8 = 99;
-fn position(start: usize, direction: Direction, count: usize) usize {
-    if (count == 0) return start;
+const FIRST: u8 = 0;
 
-    switch (direction) {
-        .L => {
-            if (start == 0) {
-                return position(LAST, direction, count - 1);
-            } else if (start > count) {
-                return start - count;
-            }
-            return position(start - 1, direction, count - 1);
-        },
-        .R => {
-            if (start == LAST) {
-                return position(0, direction, count - 1);
-            }
-            return position(start + 1, direction, count - 1);
-        },
+fn position(start: usize, direction: Direction, count: usize) usize {
+    var currentPosition = start;
+    var currentCount = count;
+    while (currentCount > 0) {
+        switch (direction) {
+            .L => {
+                if (currentPosition == 0) {
+                    currentPosition = LAST;
+                    currentCount -= 1;
+                } else if (currentPosition > currentCount) {
+                    return currentPosition - currentCount;
+                } else {
+                    currentPosition -= 1;
+                    currentCount -= 1;
+                }
+            },
+            .R => {
+                if (currentPosition == LAST) {
+                    currentPosition = FIRST;
+                } else {
+                    currentPosition += 1;
+                }
+                currentCount -= 1;
+            },
+        }
     }
+    return currentPosition;
 }
 
-fn pwd(start: usize, cmds: std.ArrayList(Cmd)) usize {
-    var list = DoublyLinkedList(usize);
-    for (0..99) |value| {
-        try list.append(list, value);
-    }
-    var current = list.first;
-    //move to the current position
-    while (current) |node| {
-        if (node == start) {
-            break;
-        }
-        std.debug.print("start: {} node:{}\n ", .{ start, node });
-        current = node.next;
-    }
+fn pwd(start: usize, cmds: []Cmd) usize {
+    var result: usize = 0;
+    var current = start;
 
-    const len: usize = cmds.items.len;
-    // for (cmds.items) |cmd| {
-    //     const before = current;
-    //     const after: usize = undefined;
-    //     switch (cmd.direction) {
-    //         .L => {},
-    //         .R => {},
-    //     }
-    // }
-    return start + len;
+    for (cmds) |cmd| {
+        current = position(current, cmd.direction, cmd.clicks);
+        if (current == 0) {
+            result += 1;
+        }
+    }
+    return result;
+}
+
+fn command(line: []const u8) !Cmd {
+    assert(line.len > 1);
+    return Cmd{
+        .direction = try std.meta.intToEnum(Direction, line[0]),
+        .clicks = try parseInt(usize, line[1..], 10),
+    };
 }
 
 fn commands(text: []const u8, allocator: std.mem.Allocator) !std.ArrayList(Cmd) {
     var result: std.ArrayList(Cmd) = .empty;
     var tk = std.mem.tokenizeAny(u8, text, "\n");
     while (tk.next()) |line| {
-        assert(line.len > 1);
-        const cmd = Cmd{
-            .direction = try std.meta.intToEnum(Direction, line[0]),
-            .clicks = try parseInt(usize, line[1..], 10),
-        };
-        try result.append(allocator, cmd);
+        try result.append(allocator, command(line));
     }
     return result;
 }
@@ -109,6 +153,7 @@ const CmdExpected = struct {
     cmd: Cmd,
     expected: usize,
 };
+
 test "position" {
     const cases = [_]CmdExpected{
         .{
@@ -152,6 +197,12 @@ test "position" {
             .expected = 32,
         },
     };
+    var cmds: [cases.len]Cmd = undefined;
+
+    for (cases, 0..) |case, i| {
+        cmds[i] = case.cmd;
+    }
+
     var current: usize = 50;
     for (cases) |case| {
         const before = current;
@@ -160,4 +211,9 @@ test "position" {
         try expect(after == case.expected);
         current = after;
     }
+
+    try expect(pwd(50, &cmds) == 3);
+
+    try expect(position(32, .R, 70) == 2);
+    try expect(position(32, .L, 43) == 89);
 }
