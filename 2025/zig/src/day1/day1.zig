@@ -2,30 +2,30 @@ const std = @import("std");
 const expect = std.testing.expect;
 const assert = @import("std").debug.assert;
 const parseInt = std.fmt.parseInt;
-const DoublyLinkedList = std.DoublyLinkedList;
-pub fn main() !void {
-    // 1. Obtain an allocator. ArenaAllocator is convenient for a single function/scope.
-    // var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    // defer arena.deinit();
-    // const allocator = arena.allocator();
 
+pub fn main() !void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const alloc = arena.allocator();
 
-    // Get the current working directory (cwd) Dir object.
-    const cwd_dir = std.fs.cwd();
-
-    // Resolve the absolute path of "." (current directory) using the allocator.
-    const cwd_path = try cwd_dir.realpathAlloc(alloc, ".");
-
-    // Print the path to standard error.
-    // Use std.debug.print for general debugging output.
-    std.debug.print("Current working directory: {s}\n", .{cwd_path});
-
     // 2. Open the file.
-    const file_path = "input1"; // Replace with your file name
-    var file = try std.fs.cwd().openFile(file_path, .{ .mode = .read_only });
+    const file_path = "./src/day1/input1"; // Replace with your file name
+
+    var file = std.fs.cwd().openFile(file_path, .{}) catch |e| switch (e) {
+        error.FileNotFound => {
+            const cwd_dir = std.fs.cwd();
+
+            // Resolve the absolute path of "." (current directory) using the allocator.
+            const cwd_path = try cwd_dir.realpathAlloc(alloc, ".");
+
+            // Handle the case where the file does not exist (e.g., create it, log a message)
+            std.debug.print("File '{s}/{s}' not found. Creating a new one.\n", .{ cwd_path, file_path });
+            // Example of creating the file if not found
+            return e;
+        },
+        else => return e,
+    };
+
     defer file.close();
 
     // 3. Create a buffer for the reader and instantiate a buffered reader.
@@ -216,4 +216,9 @@ test "position" {
 
     try expect(position(32, .R, 70) == 2);
     try expect(position(32, .L, 43) == 89);
+}
+
+test "solution" {
+    const result = try main();
+    try expect(result == 10181);
 }
